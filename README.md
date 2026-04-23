@@ -1,107 +1,79 @@
 # Enuygun Case Study (UI + API + Load)
 
-Bu repo, Enuygun uçak bileti arama modülü için **UI (Part 1)**, **API (Part 2)** ve **Load (Part 3)** testlerini aynı çatı altında içerir.
+Bu proje; Enuygun uçak bileti arama modülü için kurgulanmış, **UI**, **API** ve **performans** katmanlarını birleştiren bir test otomasyon iskeletidir.
 
 ## Teknolojiler
 
-- Java 17
-- Selenium 4
-- TestNG
-- WebDriverManager (driver yönetimi)
-- Allure (test raporu + screenshot attachment)
-- REST Assured (API)
-- k6 (Load)
+- **UI:** Java 17, Selenium 4, TestNG, WebDriverManager
+- **API:** REST Assured (CRUD ve JSON Schema doğrulama)
+- **Performans:** k6
+- **Raporlama:** Allure (UI/API), k6 HTML reporter
+
+## Proje yapısı
+
+- `src/main/java` — sayfa nesneleri, driver factory, `ConfigReader`
+- `src/test/java` — UI ve API testleri
+- `src/main/resources` — `config.properties`, JSON şemaları
+- `src/test/resources` — TestNG suite dosyaları (`testng-all.xml`, `testng-ui.xml`, `testng-api.xml`)
+- `load-test/k6/` — yük senaryosu ve rapor çıktıları
 
 ## Kurulum
 
-- Java 17 kurulu olmalı
-- Maven 3.9+ önerilir
-
-Bağımlılıkları indir ve derle:
+Java 17 ve Maven gerekir.
 
 ```bash
-mvn -q -DskipTests compile test-compile
+mvn clean install
 ```
 
-## Konfigürasyon
+## Koşum
 
-Varsayılan değerler `src/main/resources/config.properties` içindedir.
+Varsayılan: `mvn test` → `testng-all.xml` ile UI + API.
 
-İstersen koşum sırasında override edebilirsin:
+| Kapsam | Komut |
+|--------|--------|
+| Tam suite | `mvn test` |
+| Yalnızca UI | `mvn test -Dsurefire.suiteXmlFiles=src/test/resources/testng-ui.xml` |
+| Yalnızca API | `mvn test -Dsurefire.suiteXmlFiles=src/test/resources/testng-api.xml` |
+| Tek test sınıfı | `mvn test -Dtest=SınıfAdı` (gerekirse yukarıdaki `-Dsurefire.suiteXmlFiles=...` ile birlikte) |
 
-- System property: `-DbaseUrl=...`, `-DpetstoreBaseUrl=...`, `-Dbrowser=...`, `-Dheadless=...`
-- Environment variable: `baseUrl`, `PETSTORE_BASE_URL`
+## Raporlama
 
-## Part 1: UI Tests
+**Allure (UI/API):** koşumdan sonra örneğin `mvn allure:serve`. Statik rapor için `allure:report`; rapor klasöründe gerçek arayüz için **`index.html`** dosyasını açın.
 
-```bash
-mvn test
-```
+Not: Hata durumlarında UI testleri için ekran görüntüsü Allure raporuna eklenir.
 
-UI testlerini tek başına çalıştırma (suite):
-
-```bash
-mvn -q test -Dsurefire.suiteXmlFiles=src/test/resources/testng.xml
-```
-
-Allure raporu:
+**k6:** raporlar `load-test/k6/reports/` altında üretilir.
 
 ```bash
-mvn allure:serve
-```
-
-## Part 2: API Tests (Petstore)
-
-Pet CRUD (positive + negative + schema + log):
-
-```bash
-mvn -q -Dtest=PetstorePetCrudTest test
-```
-
-Schema dosyaları:
-- `src/main/resources/schemas/petstore/pet.json`
-- `src/main/resources/schemas/petstore/api-response.json`
-
-## Part 3: Load Testing (k6)
-
-Senaryo: `load-test/k6/search.js` — önce `BASE_URL` anasayfası (`tags.name: homepage`), kısa bekleme, sonra uçuş arama sonuç URL’si (`flight_search`). k6 raporunda süreler bu iki adım için ayrı metriklerde görünür (`http_req_duration{name:...}`). İki istek arası bekleme süresi (saniye): `THINK_TIME_SEC` (varsayılan `1`).
-
-### k6 Kurulum
-
-macOS (Homebrew):
-
-```bash
-brew install k6
-```
-
-Windows:
-- Chocolatey: `choco install k6`
-- Winget: `winget install k6.k6`
-
-1 kullanıcı ile çalıştırma:
-
-```bash
-# Proje kökünden çalıştırın (göreli yollar buna göre)
 k6 run load-test/k6/search.js --vus 1 --duration 30s
 ```
 
-Raporlama:
-- Konsol çıktısı: **response time** (avg/p95) ve **error rate** (`http_req_failed`)
-- `handleSummary`: `load-test/k6/reports/summary_<timestamp>.json` ve `load-test/k6/reports/report_<timestamp>.html`
+İsteğe bağlı ortam değişkenleri: `BASE_URL`, `SEARCH_URL`, `THINK_TIME_SEC`.
 
-İstersen URL / davranış override:
+## Konfigürasyon
+
+`src/main/resources/config.properties` veya JVM parametreleri (`-Danahtar=değer`).
+
+| Parametre | Örnek / açıklama |
+|-----------|------------------|
+| `browser` | `chrome`, `firefox`, … |
+| `headless` | `true` / `false` |
+| `baseUrl` | Örn. `https://www.enuygun.com` |
+| `fromCity` / `toCity` | Örn. `Istanbul`, `Ankara` |
+| `departDate` / `returnDate` | `YYYY-MM-DD` |
+| `departureTimeFilterStart` / `departureTimeFilterEnd` | Kalkış saat filtresi, `HH:mm` (örn. `10:00`, `18:00`) |
+
+Örnek:
 
 ```bash
-BASE_URL="https://www.enuygun.com" SEARCH_URL="https://www.enuygun.com/ucak-bileti/arama/..." THINK_TIME_SEC=2 k6 run load-test/k6/search.js
+mvn test -Dsurefire.suiteXmlFiles=src/test/resources/testng-ui.xml \
+  -DdepartureTimeFilterStart=09:00 \
+  -DdepartureTimeFilterEnd=15:00
 ```
 
-## Proje Yapısı
+## Öne çıkanlar
 
-- `src/main/java`: framework kodu (UI pages/driver/config, ortak config reader)
-- `src/test/java`: test senaryoları (UI + API)
-- `src/main/resources`: config + schema
-- `load-test/`: load senaryoları
-
-## Notlar
-
-- UI tarafında wait stratejileri `WebDriverWait` ile.
+- Ortak konfigürasyon (`ConfigReader` + `TestConfig`)
+- API yanıtları için JSON Schema doğrulama
+- k6 ve UI senaryolarında dinamik tarih / URL kullanımı
+- UI’da senkronizasyon için `WebDriverWait` kullanımı

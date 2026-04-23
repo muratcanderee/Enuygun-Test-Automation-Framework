@@ -20,9 +20,12 @@ public class FlightSearchTimeFilterTest extends BaseUiTest {
             .setDates(TestConfig.departDate(), TestConfig.returnDate())
             .search();
 
+    LocalTime windowStart = TestConfig.departureTimeFilterStart();
+    LocalTime windowEnd = TestConfig.departureTimeFilterEnd();
+
     results
         .assertRouteInUrl(from, to)
-        .applyDepartureTimeFilter(LocalTime.of(10, 0), LocalTime.of(18, 0))
-        .assertAllDeparturesBetween(LocalTime.of(10, 0), LocalTime.of(18, 0));
+        .applyDepartureTimeFilter(windowStart, windowEnd)
+        .assertAllDeparturesBetween(windowStart, windowEnd);
   }
 }

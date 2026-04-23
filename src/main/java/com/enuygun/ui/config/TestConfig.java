@@ -2,6 +2,7 @@ package com.enuygun.ui.config;
 
 import com.enuygun.utils.ConfigReader;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Locale;
 
 public final class TestConfig {
@@ -33,6 +34,14 @@ public final class TestConfig {
 
   public static LocalDate returnDate() {
     return LocalDate.parse(get("returnDate", LocalDate.now().plusDays(17).toString()));
+  }
+
+  public static LocalTime departureTimeFilterStart() {
+    return LocalTime.parse(get("departureTimeFilterStart", "10:00"));
+  }
+
+  public static LocalTime departureTimeFilterEnd() {
+    return LocalTime.parse(get("departureTimeFilterEnd", "18:00"));
   }
 
   private static String get(String key, String def) {

@@ -1,0 +1,13 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Enuygun UI Only" parallel="false">
+  <listeners>
+    <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+    <listener class-name="com.enuygun.ui.listeners.ScreenshotOnFailureListener"/>
+  </listeners>
+
+  <test name="UI Tests">
+    <packages>
+      <package name="com.enuygun.ui.tests"/>
+    </packages>
+  </test>
+</suite>

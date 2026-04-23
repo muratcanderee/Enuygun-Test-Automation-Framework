@@ -20,10 +20,14 @@ public class ScreenshotOnFailureListener implements ITestListener {
   @Override
   public void onTestFailure(ITestResult result) {
     Object instance = result.getInstance();
-    if (!(instance instanceof BaseUiTest)) return;
+    if (!(instance instanceof BaseUiTest)) {
+      return;
+    }
 
     WebDriver driver = ((BaseUiTest) instance).getDriver();
-    if (driver == null) return;
+    if (driver == null) {
+      return;
+    }
 
     try {
       byte[] png = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
@@ -38,4 +42,3 @@ public class ScreenshotOnFailureListener implements ITestListener {
     }
   }
 }
-

@@ -20,8 +20,8 @@
     <slf4j.version>2.0.16</slf4j.version>
     <allure.testng.version>2.29.0</allure.testng.version>
     <allure.maven.version>2.15.2</allure.maven.version>
+    <maven.build.timestamp.format>yyyyMMdd_HHmmss</maven.build.timestamp.format>
 
-    <!-- IDE warnings: these can be overridden with -D... -->
     <browser>chrome</browser>
     <headless>false</headless>
     <baseUrl>https://www.enuygun.com</baseUrl>
@@ -100,10 +100,9 @@
         <configuration>
           <useModulePath>false</useModulePath>
           <suiteXmlFiles>
-            <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+            <suiteXmlFile>src/test/resources/testng-all.xml</suiteXmlFile>
           </suiteXmlFiles>
           <systemPropertyVariables>
-            <!-- defaults; override with -Dbrowser=firefox -Dheadless=true etc. -->
             <browser>${browser}</browser>
             <headless>${headless}</headless>
             <baseUrl>${baseUrl}</baseUrl>
@@ -115,6 +114,12 @@
         <groupId>io.qameta.allure</groupId>
         <artifactId>allure-maven</artifactId>
         <version>${allure.maven.version}</version>
+        <configuration>
+          <resultsDirectory>${project.build.directory}/allure-results</resultsDirectory>
+          <reportDirectory>
+            ${project.basedir}/reports/ui-allure/enuygun-ui-allure-report_${maven.build.timestamp}
+          </reportDirectory>
+        </configuration>
       </plugin>
     </plugins>
   </build>
