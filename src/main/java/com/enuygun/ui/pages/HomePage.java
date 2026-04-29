@@ -1,10 +1,8 @@
 package com.enuygun.ui.pages;
 
-import java.time.Duration;
-import java.time.LocalDate;
+import java.time.*;
 import java.util.List;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -26,6 +24,8 @@ public class HomePage extends BasePage {
       By.cssSelector("input[data-testid='enuygun-homepage-flight-departureDate-datepicker-input']");
   private final By returnDateInput =
       By.cssSelector("input[data-testid='enuygun-homepage-flight-returnDate-datepicker-input']");
+
+  private final By anyMonthForwardBtn = By.cssSelector("button[data-testid$='month-forward-button']");
 
   private final By searchBtn =
       By.cssSelector("button[data-testid='enuygun-homepage-flight-submitButton'], button[type='submit']");
@@ -79,20 +79,60 @@ public class HomePage extends BasePage {
   }
 
   public HomePage setDates(LocalDate depart, LocalDate ret) {
-    try {
-      jsClick(visible(departDateInput));
-    } catch (Exception ignored) {
-    }
-    type(departDateInput, depart.toString());
-    visible(departDateInput).sendKeys(Keys.ENTER);
-
-    try {
-      jsClick(visible(returnDateInput));
-    } catch (Exception ignored) {
-    }
-    type(returnDateInput, ret.toString());
-    visible(returnDateInput).sendKeys(Keys.ENTER);
+    clickDateInputAndPick(departDateInput, depart);
+    clickDateInputAndPick(returnDateInput, ret);
     return this;
+  }
+
+  private void clickDateInputAndPick(By input, LocalDate target) {
+    for (int attempt = 0; attempt < 3; attempt++) {
+      try {
+        WebElement el = visible(input);
+        try {
+          jsClick(el);
+        } catch (Exception ignored) {
+          el.click();
+        }
+      } catch (Exception ignored) {
+        tryClick(input);
+      }
+
+      try {
+        new WebDriverWait(driver, Duration.ofSeconds(2))
+            .until(
+                d ->
+                    !d.findElements(By.cssSelector("div[id^='calendar-month-']")).isEmpty()
+                        || !d.findElements(anyMonthForwardBtn).isEmpty());
+        break;
+      } catch (Exception ignored) {
+      }
+    }
+
+    String title = target.toString();
+    String monthId = "calendar-month-" + YearMonth.from(target);
+
+    for (int i = 0; i < 24; i++) {
+      if (!driver.findElements(By.id(monthId)).isEmpty()) {
+        By dayBtn = By.cssSelector("button[title='" + title + "']:not([disabled])");
+        List<WebElement> days = driver.findElements(dayBtn);
+        for (WebElement day : days) {
+          try {
+            if (day.isDisplayed()) {
+              jsClick(day);
+              return;
+            }
+          } catch (Exception ignored) {
+          }
+        }
+      }
+
+      try {
+        jsClick(clickable(anyMonthForwardBtn));
+      } catch (Exception ignored) {
+      }
+    }
+
+    throw new TimeoutException("Could not pick date " + title + " from datepicker.");
   }
 
   public FlightResultsPage search() {
