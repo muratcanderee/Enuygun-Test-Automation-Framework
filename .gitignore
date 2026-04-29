@@ -8,6 +8,9 @@ allure-report/
 reports/ui-allure/**
 !reports/ui-allure/.gitkeep
 
+# Allure commandline binaries (downloaded locally)
+.allure/
+
 artifacts/
 target/
 !.mvn/wrapper/maven-wrapper.jar
